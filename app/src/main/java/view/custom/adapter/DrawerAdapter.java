@@ -13,17 +13,18 @@ import android.widget.TextView;
 
 import com.infotel.greenwav.infotel.R;
 
+import model.Group;
 import model.Mode;
 
 /**
  * Created by asauray on 2/18/15.
  */
-public class DrawerAdapter extends ArrayAdapter<Mode>{
+public class DrawerAdapter extends ArrayAdapter<Group>{
 
     private Context context;
-    private Mode[] items;
+    private Group[] items;
 
-    public DrawerAdapter(Context context, int resource, Mode[] items) {
+    public DrawerAdapter(Context context, int resource, Group[] items) {
         super(context, resource);
         this.context = context;
         this.items = items;
@@ -38,24 +39,20 @@ public class DrawerAdapter extends ArrayAdapter<Mode>{
                     context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
             view = mInflater.inflate(R.layout.item_drawer, null);
         }
-        Mode m = (Mode) (items[position]);
+        Group g = (Group) (items[position]);
 
         TextView tv = (TextView) view.findViewById(R.id.mode);
-        tv.setText(m.getTitle());
-        if(m.getVersion() == 0){
-            tv.setText("Indisponible");
-            tv.setTextColor(context.getResources().getColor(android.R.color.primary_text_light));
-        }
+        tv.setText(g.getName());
         ImageView icon = (ImageView) view.findViewById(R.id.icon);
 
-        if(m.isChecked()){
-            icon.setImageDrawable(context.getResources().getDrawable(m.getLightIcon()));
+        if(g.isChecked()){
+            //icon.setImageDrawable(context.getResources().getDrawable(g.getLightIcon()));
             icon.setAlpha(1f);
             view.setBackgroundColor(context.getResources().getColor(R.color.accent));
             tv.setTextColor(Color.WHITE);
         }
         else{
-            icon.setImageDrawable(context.getResources().getDrawable(m.getDarkIcon()));
+            //icon.setImageDrawable(context.getResources().getDrawable(g.getDarkIcon()));
             icon.setAlpha(0.54f);
             view.setBackgroundColor(Color.WHITE);
             tv.setTextColor(context.getResources().getColor(android.R.color.primary_text_light));
@@ -70,7 +67,7 @@ public class DrawerAdapter extends ArrayAdapter<Mode>{
     }
 
     @Override
-    public Mode getItem(int position) {
+    public Group getItem(int position) {
         // TODO Auto-generated method stub
         return items[position];
     }

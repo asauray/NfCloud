@@ -23,6 +23,7 @@ import com.infotel.greenwav.infotel.R;
 
 import java.util.ArrayList;
 
+import model.Group;
 import model.Mode;
 import view.activity.MainActivity;
 import view.custom.adapter.DrawerAdapter;
@@ -132,9 +133,9 @@ public class NavigationDrawerFragment extends Fragment {
         mDrawerListView.setAdapter(new DrawerAdapter(
                 this.getActivity(),
                 R.layout.item_drawer,
-                new Mode[]{new Mode("Bus", R.drawable.ic_account_box, R.drawable.ic_account_box_w),
-                        new Mode("Vélo", R.drawable.ic_account_box, R.drawable.ic_account_box_w),
-                        new Mode("Voiture Electrique", R.drawable.ic_account_box, R.drawable.ic_account_box_w)}));
+                new Group[]{new Group(1, "Mathématiques", "François Théou", "Réduction des endomorphismes", "www.theou.com"),
+                        new Group(2, "ArtShow", "Les tc", "Spectacle artistique des étudiants de l'Ubs", "www.artshow.com"),
+                        new Group(3, "Mathématiques", "François Théou", "Réduction des endomorphismes", "www.theou.com")}));
 
         // set a custom shadow that overlays the main content when the drawer opens
         //drawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
@@ -196,11 +197,11 @@ public class NavigationDrawerFragment extends Fragment {
     }
 
     public void selectItem(int position) {
-        ((Mode) mDrawerListView.getItemAtPosition(positionHistory.get(positionHistory.size()-1))).setChecked(false);
+        ((Group) mDrawerListView.getItemAtPosition(positionHistory.get(positionHistory.size()-1))).setChecked(false);
         positionHistory.add(position);
         if (mDrawerListView != null) {
             mDrawerListView.setItemChecked(position, true);
-            ((Mode) mDrawerListView.getItemAtPosition(position)).setChecked(true);
+            ((Group) mDrawerListView.getItemAtPosition(position)).setChecked(true);
             ((DrawerAdapter)mDrawerListView.getAdapter()).notifyDataSetChanged();
         }
         if (drawerLayout != null) {

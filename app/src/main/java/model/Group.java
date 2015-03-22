@@ -10,6 +10,7 @@ public class Group implements Parcelable, Comparable<Group>{
 
     private int id;
     private String name, admin,description, url;
+    private boolean isChecked;
 
     public Group(int id, String name, String admin, String description, String url){
         this.id = id;
@@ -17,6 +18,7 @@ public class Group implements Parcelable, Comparable<Group>{
         this.admin = admin;
         this.description = description;
         this.url = url;
+        isChecked=false;
     }
 
     public Group(Parcel in){
@@ -41,6 +43,14 @@ public class Group implements Parcelable, Comparable<Group>{
 
     public String getUrl(){
         return url;
+    }
+
+    public boolean isChecked(){
+        return isChecked;
+    }
+
+    public void setChecked(boolean isChecked){
+        this.isChecked = isChecked;
     }
 
     @Override
