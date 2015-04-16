@@ -1,18 +1,17 @@
 package view.activity;
 
 import android.animation.Animator;
-import android.animation.ObjectAnimator;
+import android.app.AlertDialog;
 import android.app.PendingIntent;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
-import android.nfc.FormatException;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.nfc.NfcAdapter;
 import android.nfc.Tag;
 import android.nfc.tech.Ndef;
-import android.nfc.tech.NdefFormatable;
 import android.nfc.tech.NfcV;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -26,7 +25,9 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewAnimationUtils;
-import android.widget.RelativeLayout;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,19 +37,21 @@ import com.infotel.greenwav.infotel.R;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 import model.Nfcard;
-import model.db.external.CheckHashAuthenticity;
+import model.db.external.json.AssociateCard;
+import model.db.external.json.Genuine;
+import model.db.external.json.GetRoomInformations;
+import model.db.external.json.JoinRoom;
 
 /**
  * Created by sauray on 20/03/15.
  */
 public class NfcActivity extends ActionBarActivity implements View.OnLayoutChangeListener {
 
-    private NdefMessage[] msgs;
-
     public static final String MIME_TEXT_PLAIN = "text/plain";
+
+    private NdefMessage[] msgs;
 
     private NfcAdapter nfcAdapter;
     private Tag tag;
@@ -61,6 +64,8 @@ public class NfcActivity extends ActionBarActivity implements View.OnLayoutChang
     private CardView nfcInfo, nfcAuthenticity, nfcAssociate, nfcJoin;
 
     private Nfcard nfcard;
+
+    private Button associate;
 
     @Override
     public void onCreate(Bundle savedState) {
@@ -103,6 +108,10 @@ public class NfcActivity extends ActionBarActivity implements View.OnLayoutChang
         nfcAuthenticity = (CardView) findViewById(R.id.card_view_hash);
         nfcAssociate = (CardView) findViewById(R.id.card_view_associate);
         nfcJoin = (CardView) findViewById(R.id.card_view_join);
+
+        associate = (Button) findViewById(R.id.associate);
+        associate.setClickable(false);
+        associate.setTextColor(getResources().getColor(android.R.color.tertiary_text_light));
     }
 
     public void onResume() {
@@ -133,7 +142,6 @@ public class NfcActivity extends ActionBarActivity implements View.OnLayoutChang
         super.onPause();
         nfcAdapter.disableForegroundDispatch(this);
     }
-
 
     @Override
     protected void onNewIntent(Intent intent){
@@ -179,28 +187,6 @@ public class NfcActivity extends ActionBarActivity implements View.OnLayoutChang
         }
     }
 
-
-    private void write(Tag tag, String hash) throws IOException, FormatException {
-        // Get an instance of Ndef for the tag.
-        Ndef ndef = Ndef.get(tag);
-
-        if(ndef != null) {
-            // Enable I/O
-            ndef.connect();
-
-            NdefMessage msg = new NdefMessage(
-                    new NdefRecord[]{
-                            NdefRecord.createMime("text/plain", hash.getBytes()),
-                            NdefRecord.createApplicationRecord("com.infotel.greenwav.infotel")});
-            NdefFormatable ndefFormatable = NdefFormatable.get(tag);
-            ndefFormatable.format(msg);
-            ndef.close();
-        }
-        else{
-            Toast.makeText(this, "Vous avez bougé", Toast.LENGTH_SHORT).show();
-        }
-    }
-
     /**
      * Background task for reading the data. Do not block the UI thread while reading.
      *
@@ -231,13 +217,7 @@ public class NfcActivity extends ActionBarActivity implements View.OnLayoutChang
             String[] ret = new String[records.length];
             int i=0;
             for (NdefRecord ndefRecord : records) {
-                if (ndefRecord.getTnf() == NdefRecord.TNF_WELL_KNOWN && Arrays.equals(ndefRecord.getType(), NdefRecord.RTD_TEXT)) {
-                    try {
-                        ret[i] = readText(ndefRecord);
-                    } catch (UnsupportedEncodingException e) {
-                        Log.e("TASK", "Unsupported Encoding", e);
-                    }
-                }
+                ret[i] = new String(ndefRecord.getPayload());
                 i++;
             }
 
@@ -273,27 +253,23 @@ public class NfcActivity extends ActionBarActivity implements View.OnLayoutChang
         @Override
         protected void onPostExecute(String[] result) {
             if (result != null) {
-                if(result.length<4){
-                    nfcard = new Nfcard(result[0]);
-                    nfcAssociate.setVisibility(View.GONE);
-                    nfcJoin.setVisibility(View.VISIBLE);
-                    ((TextView)NfcActivity.this.findViewById(R.id.name)).setText(nfcard.getSha256());
+                if(result.length==3){
+                        nfcard = new Nfcard(Integer.parseInt(result[1]), result[0]);
+                        nfcAssociate.setVisibility(View.GONE);
+                        nfcJoin.setVisibility(View.VISIBLE);
+                    ((TextView)NfcActivity.this.findViewById(R.id.authenticity)).setText("Salle de partage");
+                    new GetRoomInformations(NfcActivity.this, ((TextView)NfcActivity.this.findViewById(R.id.name)),((TextView)NfcActivity.this.findViewById(R.id.description)), nfcard.getSha256()).execute();
                 }
-                else{
+                else if (result.length==4){
                     nfcJoin.setVisibility(View.GONE);
                     nfcAssociate.setVisibility(View.VISIBLE);
-
-                    String[] hints = new String[]{"id", "nom", "role", "id carte"};
                     try {
-                        nfcard = new Nfcard(Integer.parseInt(result[0]), Integer.parseInt(result[3]), result[1], result[2]);
+                        nfcard = new Nfcard(Integer.parseInt(result[1]),Integer.parseInt(result[2]));
                     } catch (NoSuchAlgorithmException e) {
                         e.printStackTrace();
                     }
-                    ((TextView)NfcActivity.this.findViewById(R.id.name)).setText(nfcard.getName()+"");
-                    ((TextView)NfcActivity.this.findViewById(R.id.privilege)).setText(nfcard.getPrivilege()+"");
-                    ((TextView)NfcActivity.this.findViewById(R.id.idCard)).setText(nfcard.getCardID() + "");
-
-                    new CheckHashAuthenticity(((TextView)NfcActivity.this.findViewById(R.id.authenticity))).execute(nfcard.getSha256());
+                    new GetRoomInformations(NfcActivity.this, ((TextView)NfcActivity.this.findViewById(R.id.name)),((TextView)NfcActivity.this.findViewById(R.id.description)), nfcard.getRoom()).execute();
+                    new Genuine(((TextView)NfcActivity.this.findViewById(R.id.authenticity)), ((ImageView)NfcActivity.this.findViewById(R.id.genuine)),associate).execute(nfcard);
                 }
             }
         }
@@ -398,13 +374,31 @@ public class NfcActivity extends ActionBarActivity implements View.OnLayoutChang
     }
 
     public void onClick(View v){
-        try {
-            write(tag, nfcard.getSha256());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (FormatException e) {
-            e.printStackTrace();
+        switch(v.getId()){
+
+            case R.id.associate:
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Association de carte");
+                builder.setMessage("Veillez à maintenir votre périphérique à proximité de la puce nfc");
+                builder.setNeutralButton("Je suis prêt", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        new AssociateCard(NfcActivity.this, tag, nfcard).execute();
+                    }
+                });
+                builder.show();
+                break;
+            case R.id.join:
+                new JoinRoom(this, nfcard).execute();
+                break;
+            case R.id.cancelAssociate:
+                finish();
+                break;
+            case R.id.cancelJoin:
+                finish();
+                break;
         }
+
     }
 
 

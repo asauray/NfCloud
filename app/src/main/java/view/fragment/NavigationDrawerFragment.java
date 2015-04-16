@@ -7,7 +7,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -17,15 +16,16 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.infotel.greenwav.infotel.R;
 
 import java.util.ArrayList;
 
-import model.Group;
 import model.Mode;
-import view.activity.MainActivity;
+import model.Room;
 import view.custom.adapter.DrawerAdapter;
 
 /**
@@ -80,7 +80,7 @@ public class NavigationDrawerFragment extends Fragment {
     /**
      * The current position in the list
      */
-    private ArrayList<Integer> positionHistory;
+    private Mode currentMode;
     /**
      *
      */
@@ -90,19 +90,24 @@ public class NavigationDrawerFragment extends Fragment {
      */
     private boolean userLearnedDrawer;
 
+    private Mode m1, m2, m3;
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         // Indicate that this fragment would like to influence the set of actions in the action bar.
         setHasOptionsMenu(true);
-        positionHistory = new ArrayList<>();
-        positionHistory.add(0); // pour éviter le plantage due à la taille = 0. On a pas aucune position précédente au lancement.
+        currentMode = null;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_navigation_drawer, container, false);
 
+
+        m1 = new Mode(Mode.ALL, "Toutes les salles", R.drawable.ic_action_nfcard);
+        m2 = new Mode(Mode.ADMIN_ROOMS, "Administrateur", R.drawable.ic_action_nfcard);
+        m3 = new Mode(Mode.USER_ROOMS, "Utilisateur", R.drawable.ic_action_nfcard);
         mDrawerListView = (ListView) root.findViewById(R.id.list);
         mDrawerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -112,7 +117,6 @@ public class NavigationDrawerFragment extends Fragment {
         });
 
         int displayMode = getResources().getConfiguration().orientation;
-
         return root;
     }
 
@@ -133,10 +137,7 @@ public class NavigationDrawerFragment extends Fragment {
         mDrawerListView.setAdapter(new DrawerAdapter(
                 this.getActivity(),
                 R.layout.item_drawer,
-                new Group[]{new Group(1, "Mathématiques", "François Théou", "Réduction des endomorphismes", "www.theou.com"),
-                        new Group(2, "ArtShow", "Les tc", "Spectacle artistique des étudiants de l'Ubs", "www.artshow.com"),
-                        new Group(3, "Mathématiques", "François Théou", "Réduction des endomorphismes", "www.theou.com")}));
-
+                new Mode[]{m1,m2,m3}));
         // set a custom shadow that overlays the main content when the drawer opens
         //drawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
         // set up the drawer's list view with items and click listener
@@ -194,14 +195,17 @@ public class NavigationDrawerFragment extends Fragment {
         });
 
         this.drawerLayout.setDrawerListener(drawerToggle);
+        //selectItem(0);
     }
 
     public void selectItem(int position) {
-        ((Group) mDrawerListView.getItemAtPosition(positionHistory.get(positionHistory.size()-1))).setChecked(false);
-        positionHistory.add(position);
+        if(currentMode != null) {
+            currentMode.setChecked(false);
+        }
+        currentMode = (Mode) mDrawerListView.getAdapter().getItem(position);
         if (mDrawerListView != null) {
             mDrawerListView.setItemChecked(position, true);
-            ((Group) mDrawerListView.getItemAtPosition(position)).setChecked(true);
+            ((Mode) mDrawerListView.getItemAtPosition(position)).setChecked(true);
             ((DrawerAdapter)mDrawerListView.getAdapter()).notifyDataSetChanged();
         }
         if (drawerLayout != null) {
@@ -212,12 +216,14 @@ public class NavigationDrawerFragment extends Fragment {
         }
     }
 
-    public int getPreviousPosition(){
-        return positionHistory.get(positionHistory.size()-2);
+    public void close(){
+        if (drawerLayout != null) {
+            drawerLayout.closeDrawer(Gravity.LEFT);
+        }
     }
 
     public int getCurrentModeSelected(){
-        return mDrawerListView.getSelectedItemPosition();
+        return currentMode.getRoomParameter();
     }
 
     @Override
@@ -239,7 +245,6 @@ public class NavigationDrawerFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(STATE_SELECTED_POSITION, positionHistory.get(positionHistory.size()-1));
     }
 
     @Override
@@ -270,10 +275,6 @@ public class NavigationDrawerFragment extends Fragment {
         return super.onOptionsItemSelected(item);
     }
 
-    private ActionBar getActionBar() {
-        return ((MainActivity) getActivity()).getSupportActionBar();
-    }
-
     /**
      * Callbacks interface that all activities using this fragment must implement.
      */
@@ -282,9 +283,5 @@ public class NavigationDrawerFragment extends Fragment {
          * Called when an item_suggestion in the navigation drawer is selected.
          */
         void onNavigationDrawerItemSelected(int position);
-    }
-
-    public boolean getModeAvailability(int position){
-        return ((Mode)mDrawerListView.getItemAtPosition(position)).getVersion() != 0;
     }
 }

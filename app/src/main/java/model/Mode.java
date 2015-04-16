@@ -6,14 +6,20 @@ package model;
 public class Mode {
 
     private String title;
-    private int darkIcon, lightIcon, version;
+    private int roomParameter, darkIcon;
     private boolean isChecked;
 
-    public Mode(String title, int darkIcon, int lightIcon){
+    public static final int ALL=0, ADMIN_ROOMS=1, USER_ROOMS=2;
+
+    public Mode(int roomParameter, String title, int darkIcon){
+        this.roomParameter = roomParameter;
         this.title = title;
         this.darkIcon = darkIcon;
-        this.lightIcon = lightIcon;
         isChecked = false;
+    }
+
+    public int getRoomParameter(){
+        return roomParameter;
     }
 
     public String getTitle(){
@@ -24,10 +30,6 @@ public class Mode {
         return darkIcon;
     }
 
-    public int getLightIcon(){
-        return lightIcon;
-    }
-
     public boolean isChecked(){
         return isChecked;
     }
@@ -36,7 +38,4 @@ public class Mode {
         this.isChecked = isChecked;
     }
 
-    public int getVersion(){
-        return version;
-    }
 }

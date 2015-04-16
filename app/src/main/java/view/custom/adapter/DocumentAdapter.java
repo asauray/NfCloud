@@ -6,6 +6,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -61,6 +62,15 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
         holder.name.setText(d.getName());
         holder.specification.setText(d.getSpecification());
         holder.description.setText(d.getDescription());
+
+        if(holder.documentItem.getLocation() != null){
+            holder.icon.setImageResource(R.drawable.ic_cloud_done);
+        }
+        else{
+            holder.icon.setImageResource(R.drawable.ic_cloud_ready);
+        }
+
+
         if(calendar.get(Calendar.YEAR) != holder.documentItem.getCalendar().get(Calendar.YEAR)){
             holder.date.setText(d.getCalendar().get(Calendar.YEAR)+"");
         }
@@ -84,6 +94,17 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
         notifyItemRangeChanged(0, mDataset.size());
     }
 
+    public void removeAll(){
+        int size = mDataset.size();
+        mDataset.clear();
+        notifyItemRangeRemoved(0, size);
+    }
+
+    public void remove(int position){
+        mDataset.remove(position);
+        notifyItemRemoved(position);
+    }
+
     // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
@@ -93,6 +114,7 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
     public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         // each data item is just a string in this case
         TextView name, specification, description, date;
+        ImageView icon;
         Document documentItem;
         Activity activity;
 
@@ -104,6 +126,7 @@ public class DocumentAdapter extends RecyclerView.Adapter<DocumentAdapter.ViewHo
             specification = (TextView) lyt_main.findViewById(R.id.specification);
             description = (TextView) lyt_main.findViewById(R.id.description);
             date = (TextView) lyt_main.findViewById(R.id.date);
+            icon = (ImageView) lyt_main.findViewById(R.id.icon);
         }
 
         @Override

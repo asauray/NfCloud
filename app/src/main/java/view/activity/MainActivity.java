@@ -1,42 +1,27 @@
 package view.activity;
 
-import android.app.PendingIntent;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.nfc.FormatException;
-import android.nfc.NdefMessage;
-import android.nfc.NdefRecord;
-import android.nfc.NfcAdapter;
-import android.nfc.Tag;
-import android.nfc.tech.Ndef;
-import android.nfc.tech.NdefFormatable;
-import android.nfc.tech.NfcV;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.MenuItem;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.view.View;
 
 import com.infotel.greenwav.infotel.R;
 
-import model.Authenticate;
-import model.Group;
-import view.custom.adapter.GroupAdapter;
-import view.fragment.NavigationDrawerFragment;
+import java.util.HashMap;
+import java.util.Map;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
+import model.Mode;
+import model.Room;
+import model.db.external.json.GetRooms;
+import view.custom.adapter.RoomAdapter;
+import view.fragment.NavigationDrawerFragment;
 
 
 public class MainActivity extends ActionBarActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks{
@@ -56,38 +41,40 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
     /**
      * The list of lines from the groups the user belongs to
      */
-    private GroupAdapter adapter;
+    private RoomAdapter adapter;
     /**
      * The layout manager
      */
     private LinearLayoutManager layoutManager;
 
+    private SwipeRefreshLayout swipeRefreshLayout;
+
+    private String username, password;
+
+    private Map<Integer, Room> rooms;
+
     @Override
     public void onCreate(Bundle savedState) {
         super.onCreate(savedState);
         setContentView(R.layout.activity_main);
+        Bundle extras = getIntent().getExtras();
         initInterface();
-
-        new Authenticate(this).execute();
-
-        adapter.add(new Group(0, "Programmation", "Michel Adam", "TestAlgo", "www.prog.com"));
-        adapter.add(new Group(1, "Base de donnée", "Didier Bogdaniuk", "Vous pouvez rentrer chez vous","www.bdd.com"));
-        adapter.add(new Group(2, "Système Réseau", "François Morice", "C'est reparti pour un tour","www.asr.com"));
-        adapter.add(new Group(3, "Mobile", "Mathieu Le Lain", "Essayez l'introspection des méthodes","www.mobile.com"));
-        adapter.add(new Group(4, "Economie", "Muriel Mannevy", "Business plan et chiffre d'affaire", "www.eco.com"));
+        //new GetRooms(this, adapter, swipeRefreshLayout).execute(Mode.ALL);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-                this.finish();
+                mNavigationDrawerFragment.close();
         }
         return super.onOptionsItemSelected(item);
     }
 
     private void initInterface(){
         toolbar = (Toolbar) findViewById(R.id.toolbar);
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
+        swipeRefreshLayout.setColorSchemeColors(R.color.accent);
         toolbar.setTitle(this.getResources().getString(R.string.activity_main));
         setSupportActionBar(toolbar);
         ActionBar actionBar = getSupportActionBar();
@@ -96,10 +83,6 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
 
         mNavigationDrawerFragment = (NavigationDrawerFragment)
                 getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
-
-        mNavigationDrawerFragment.setUp(
-                R.id.navigation_drawer,
-                (DrawerLayout) findViewById(R.id.drawer_layout));
 
         recyclerView = (RecyclerView) findViewById(R.id.list);
 
@@ -112,18 +95,35 @@ public class MainActivity extends ActionBarActivity implements NavigationDrawerF
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
         // specify an adapter (see also next example)
-        adapter = new GroupAdapter(this);
+        adapter = new RoomAdapter(this);
 
         recyclerView.setAdapter(adapter);
 
-        //registerForContextMenu(list);
-        //new GetLocalLines(this, currentNetwork, adapter).execute();
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                // Refresh items
+                refreshItems();
+            }
+        });
 
+        mNavigationDrawerFragment.setUp(
+                R.id.navigation_drawer,
+                (DrawerLayout) findViewById(R.id.drawer_layout));
+
+    }
+
+    private void refreshItems() {
+        int size = adapter.getItemCount();
+        adapter.removeAll();
+        adapter.notifyItemRangeRemoved(0, size);
+        new GetRooms(this, adapter, swipeRefreshLayout, mNavigationDrawerFragment.getCurrentModeSelected(), (android.widget.TextView) findViewById(R.id.noRooms)).execute();
     }
 
     @Override
     public void onNavigationDrawerItemSelected(int position) {
-
+        refreshItems();
     }
+
 
 }

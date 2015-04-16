@@ -4,10 +4,12 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.util.Log;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,6 +18,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import model.Document;
+import model.db.internal.CloudDAO;
 import view.activity.PdfActivity;
 
 
@@ -23,10 +26,10 @@ public class GetDocument extends AsyncTask<Document, Integer, Document>{
 
     private Activity a;
     private ProgressDialog pd;
+    private String fileUrl;
 
     public GetDocument(Activity a) {
         this.a = a;
-
 // instantiate it within the onCreate method
         pd = new ProgressDialog(a);
         pd.setIndeterminate(true);
@@ -37,7 +40,6 @@ public class GetDocument extends AsyncTask<Document, Integer, Document>{
 
     @Override
     protected Document doInBackground(Document... params) {
-
         if(params[0].getLocation()==null) {
 
             pd.setMessage("Téléchargement de "+params[0].getName());
@@ -46,7 +48,9 @@ public class GetDocument extends AsyncTask<Document, Integer, Document>{
             OutputStream output = null;
             HttpURLConnection connection = null;
             try {
-                URL url = new URL(params[0].getUrl());
+                fileUrl = "http://sauray.me/nfcloud/data/rooms/"+params[0].getRoom()+"/"+params[0].getFileName();
+                Log.d(fileUrl, "url");
+                URL url = new URL(fileUrl);
                 connection = (HttpURLConnection) url.openConnection();
                 connection.connect();
 
@@ -92,6 +96,10 @@ public class GetDocument extends AsyncTask<Document, Integer, Document>{
                         publishProgress((int) (total * 100 / fileLength));
                     output.write(data, 0, count);
                 }
+                CloudDAO dao = new CloudDAO(a);
+                dao.open();
+                dao.insertDocument(params[0]);
+                dao.close();
             } catch (Exception e) {
                 e.printStackTrace();
                 return null;
@@ -119,16 +127,48 @@ public class GetDocument extends AsyncTask<Document, Integer, Document>{
     protected void onPostExecute(Document result){
         pd.dismiss();
         if(result != null) {
-            Intent intent = new Intent(a, PdfActivity.class);
-            intent.putExtra("DOCUMENT", result);
-            a.startActivity(intent);
+            if(result.getExtension().equals("pdf")) {
+                Intent intent = new Intent(a, PdfActivity.class);
+                intent.putExtra("DOCUMENT", result);
+                a.startActivity(intent);
+            }
+            else{
+                Intent intent = new Intent();
+                intent.setAction(android.content.Intent.ACTION_VIEW);
+                String contentType=null;
+                Log.d(result.getExtension(), "extension");
+                if(result.getExtension().matches("mp3|ogg|flac")){
+                    contentType="audio/*";
+                }
+                else if(result.getExtension().matches("mp4|mov|avi")){
+                    contentType="video/*";
+                }
+                else if(result.getExtension().matches("jpg|png|gif")){
+                    contentType="image/*";
+                }
+                else{
+
+                }
+                intent.setDataAndType(Uri.fromFile(new File(result.getLocation())),contentType);
+                a.startActivity(intent);
+            }
         }
         else{
-            AlertDialog.Builder builder = new AlertDialog.Builder(a);
-            builder.setMessage("Erreur téléchargement")
-                    .setTitle("Le fichier n'a pas pu être téléchargé");
-            AlertDialog dialog = builder.create();
-            dialog.show();
+            if(NetworkUtils.isConnected(a)){
+                AlertDialog.Builder builder = new AlertDialog.Builder(a);
+                builder.setMessage("Erreur téléchargement")
+                        .setTitle("Le fichier n'a pas pu être téléchargé.");
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+            else{
+                AlertDialog.Builder builder = new AlertDialog.Builder(a);
+                builder.setMessage("Ouverture impossible")
+                        .setTitle("Vous n'avez pas préchargé ce fichier.");
+                AlertDialog dialog = builder.create();
+                dialog.show();
+            }
+
         }
     }
 

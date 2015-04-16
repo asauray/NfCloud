@@ -3,7 +3,7 @@ package view.custom.adapter;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,18 +13,18 @@ import android.widget.TextView;
 
 import com.infotel.greenwav.infotel.R;
 
-import model.Group;
 import model.Mode;
+import model.Room;
 
 /**
  * Created by asauray on 2/18/15.
  */
-public class DrawerAdapter extends ArrayAdapter<Group>{
+public class DrawerAdapter extends ArrayAdapter<Mode>{
 
     private Context context;
-    private Group[] items;
+    private Mode[] items;
 
-    public DrawerAdapter(Context context, int resource, Group[] items) {
+    public DrawerAdapter(Context context, int resource, Mode[] items) {
         super(context, resource);
         this.context = context;
         this.items = items;
@@ -39,22 +39,16 @@ public class DrawerAdapter extends ArrayAdapter<Group>{
                     context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE);
             view = mInflater.inflate(R.layout.item_drawer, null);
         }
-        Group g = (Group) (items[position]);
+        Mode m = (Mode) (items[position]);
 
+        Log.d(m.getTitle(), "room get view");
         TextView tv = (TextView) view.findViewById(R.id.mode);
-        tv.setText(g.getName());
-        ImageView icon = (ImageView) view.findViewById(R.id.icon);
+        tv.setText(m.getTitle());
 
-        if(g.isChecked()){
-            //icon.setImageDrawable(context.getResources().getDrawable(g.getLightIcon()));
-            icon.setAlpha(1f);
-            view.setBackgroundColor(context.getResources().getColor(R.color.accent));
-            tv.setTextColor(Color.WHITE);
+        if(m.isChecked()){
+            tv.setTextColor(context.getResources().getColor(R.color.accent));
         }
         else{
-            //icon.setImageDrawable(context.getResources().getDrawable(g.getDarkIcon()));
-            icon.setAlpha(0.54f);
-            view.setBackgroundColor(Color.WHITE);
             tv.setTextColor(context.getResources().getColor(android.R.color.primary_text_light));
         }
         return view;
@@ -67,7 +61,7 @@ public class DrawerAdapter extends ArrayAdapter<Group>{
     }
 
     @Override
-    public Group getItem(int position) {
+    public Mode getItem(int position) {
         // TODO Auto-generated method stub
         return items[position];
     }

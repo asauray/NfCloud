@@ -9,44 +9,45 @@ import model.security.Hash;
  */
 public class Nfcard {
 
-    private String name, privilege;
-    private int userID, cardID;
+    private int id, room;
     private String hash;
 
-    public Nfcard(int idUser, int idCard, String name, String privilege) throws NoSuchAlgorithmException {
-        this.userID = idUser;
-        this.cardID = idCard;
-        this.name = name;
-        this.privilege = privilege;
-        hash = Hash.sha256(""+userID + name + privilege + cardID);
+    public Nfcard(int id, int room) throws NoSuchAlgorithmException {
+        this.id = id;
+        this.room = room;
+        hash = Hash.sha256(""+id + room);
     }
 
-    public Nfcard(String hash){
+    public Nfcard(int id, String hash){
+        this.id = id;
+        this.room = -1;
         this.hash = hash;
     }
 
-    public String getName(){
-        return name;
+    public Nfcard(int id, int room, String hash){
+        this.id = id;
+        this.room = room;
+        this.hash = hash;
     }
 
-    public int getUserID(){
-        return userID;
+    public int getId(){
+        return id;
     }
 
-    public int getCardID(){
-        return cardID;
-    }
-
-    public String getPrivilege(){
-        return privilege;
+    public int getRoom(){
+        return room;
     }
 
     public String getSha256(){
         return hash;
     }
 
+    public void setSha256(String hash){
+        this.hash = hash;
+    }
+
     public String toString(){
-        return "userID="+userID+" - cardID="+cardID+" - privilege="+privilege+" - name="+name;
+        return "id="+id+" - privilege="+room;
     }
 
 }

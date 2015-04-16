@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">InfoTel</string>
+    <string name="app_name">NFCloud</string>
 
     <string name="title_section1">Section 1</string>
     <string name="title_section2">Section 2</string>
@@ -10,9 +10,10 @@
 
     <string name="action_example">Example action</string>
 
-    <string name="action_settings">Settings</string>
+    <string name="action_settings">Réglages</string>
+    <string name="action_add">Ajouter un document</string>
 
-    <string name="activity_main">StudCard</string>
+    <string name="activity_main">NFCloud</string>
 
     <string name="option">Options</string>
 </resources>

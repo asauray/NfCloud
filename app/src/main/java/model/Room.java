@@ -6,22 +6,39 @@ import android.os.Parcelable;
 /**
  * Created by sauray on 21/03/15.
  */
-public class Group implements Parcelable, Comparable<Group>{
+public class Room implements Parcelable, Comparable<Room>{
 
     private int id;
-    private String name, admin,description, url;
+    private String name;
+    private String admin;
+    private String description;
+    private String url;
+    private String userGroup;
     private boolean isChecked;
+    private int category;
 
-    public Group(int id, String name, String admin, String description, String url){
-        this.id = id;
+    public Room(String name, String description){
+        this.id = -1;
         this.name = name;
-        this.admin = admin;
+        this.admin = null;
         this.description = description;
-        this.url = url;
+        this.userGroup = null;
+        this.category = -1;
         isChecked=false;
     }
 
-    public Group(Parcel in){
+
+    public Room(int id, String name, String description, String userGroup, int category){
+        this.id = id;
+        this.name = name;
+        this.admin = null;
+        this.description = description;
+        this.userGroup = userGroup;
+        this.category = category;
+        isChecked=false;
+    }
+
+    public Room(Parcel in){
         readFromParcel(in);
     }
 
@@ -45,6 +62,10 @@ public class Group implements Parcelable, Comparable<Group>{
         return url;
     }
 
+    public int getCategory(){
+        return category;
+    }
+
     public boolean isChecked(){
         return isChecked;
     }
@@ -52,6 +73,15 @@ public class Group implements Parcelable, Comparable<Group>{
     public void setChecked(boolean isChecked){
         this.isChecked = isChecked;
     }
+
+    public String getUserGroup() {
+        return userGroup;
+    }
+
+    public void setUserGroup(String userGroup) {
+        this.userGroup = userGroup;
+    }
+
 
     @Override
     public int describeContents() {
@@ -63,27 +93,29 @@ public class Group implements Parcelable, Comparable<Group>{
         dest.writeInt(id);
         dest.writeString(name);
         dest.writeString(url);
+        dest.writeInt(category);
     }
 
     private void readFromParcel(Parcel in) {
         id = in.readInt();
         name = in.readString();
         url = in.readString();
+        category = in.readInt();
     }
 
     public static final Parcelable.Creator CREATOR =
             new Parcelable.Creator() {
-                public Group createFromParcel(Parcel in) {
-                    return new Group(in);
+                public Room createFromParcel(Parcel in) {
+                    return new Room(in);
                 }
 
-                public Group[] newArray(int size) {
-                    return new Group[size];
+                public Room[] newArray(int size) {
+                    return new Room[size];
                 }
             };
 
     @Override
-    public int compareTo(Group another) {
+    public int compareTo(Room another) {
         return name.compareTo(name);
     }
 
