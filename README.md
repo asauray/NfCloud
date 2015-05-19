@@ -1,6 +1,6 @@
 # NfCloud
 
-NfCloud is a cloud system. The only difference with others cloud systems is that you need to provide a physical key access (a special nfc card) to people you want to provide access.
+NfCloud is a cloud system. The only difference with others cloud systems is that you need to give a physical key (a special nfc card) to provide access to people.
 Once the card is scanned, you gain secure access to the room
 
 Copyright 2015 Antoine Sauray
